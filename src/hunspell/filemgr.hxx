@@ -76,17 +76,18 @@
 #include <cstdio>
 #include <string>
 #include <fstream>
+#include "hunsource.hxx"
 
 class FileMgr {
  protected:
-  std::ifstream fin;
+  HunStreamPtr fin;
   Hunzip* hin;
   char in[BUFSIZE + 50];  // input buffer
   int fail(const char* err, const char* par);
   int linenum;
 
  public:
-  FileMgr(const char* filename, const char* key = NULL);
+  FileMgr(HunSource src, const char* key = NULL);
   FileMgr(const FileMgr&) = delete;
   FileMgr& operator=(const FileMgr&) = delete;
   ~FileMgr();
