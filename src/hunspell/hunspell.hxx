@@ -75,6 +75,7 @@
 #include "atypes.hxx"
 #include <string>
 #include <vector>
+#include "hunsource.hxx"
 
 #define SPELL_XML "<?xml?>"
 
@@ -111,13 +112,13 @@ class LIBHUNSPELL_DLL_EXPORTED Hunspell {
    * long path names (without the long path prefix Hunspell will use fopen()
    * with system-dependent character encoding instead of _wfopen()).
    */
-  Hunspell(const char* affpath, const char* dpath, const char* key = NULL);
+	 Hunspell(HunSource affpath, HunSource dpath, const char* key = NULL);
   Hunspell(const Hunspell&) = delete;
   Hunspell& operator=(const Hunspell&) = delete;
   ~Hunspell();
 
   /* load extra dictionaries (only dic files) */
-  int add_dic(const char* dpath, const char* key = NULL);
+  int add_dic(HunSource dpath, const char* key = NULL);
 
   /* spell(word) - spellcheck word
    * output: false = bad word, true = good word
