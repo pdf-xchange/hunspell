@@ -87,11 +87,11 @@
 class HunspellImpl
 {
 public:
-  HunspellImpl(const char* affpath, const char* dpath, const char* key = NULL);
+  HunspellImpl(HunSource aff, HunSource dic, const char* key = NULL);
   HunspellImpl(const HunspellImpl&) = delete;
   HunspellImpl& operator=(const HunspellImpl&) = delete;
   ~HunspellImpl();
-  int add_dic(const char* dpath, const char* key = NULL);
+  int add_dic(HunSource dpath, const char* key = NULL);
   std::vector<std::string> suffix_suggest(const std::string& root_word);
   std::vector<std::string> generate(const std::string& word, const std::vector<std::string>& pl);
   std::vector<std::string> generate(const std::string& word, const std::string& pattern);
@@ -132,7 +132,7 @@ private:
   AffixMgr* pAMgr;
   std::vector<HashMgr*> m_HMgrs;
   SuggestMgr* pSMgr;
-  std::string affixpath;
+  HunSource affixpath;
   std::string encoding;
   const struct cs_info* csconv;
   int langnum;
@@ -174,18 +174,18 @@ private:
   int check_xml_par(const std::string& q, std::string::size_type pos, const char* attr, const char* value);
 };
 
-HunspellImpl::HunspellImpl(const char* affpath, const char* dpath, const char* key)
-  : affixpath(affpath) {
+HunspellImpl::HunspellImpl(HunSource aff, HunSource dic, const char* key)
+  : affixpath(aff) {
   csconv = NULL;
   utf8 = 0;
   complexprefixes = 0;
 
   /* first set up the hash manager */
-  m_HMgrs.push_back(new HashMgr(dpath, affpath, key));
+  m_HMgrs.push_back(new HashMgr(dic, aff, key));
 
   /* next set up the affix manager */
   /* it needs access to the hash manager lookup methods */
-  pAMgr = new AffixMgr(affpath, m_HMgrs, key);
+  pAMgr = new AffixMgr(aff, m_HMgrs, key);
 
   /* get the preferred try string and the dictionary */
   /* encoding from the Affix Manager for that dictionary */
@@ -216,8 +216,8 @@ HunspellImpl::~HunspellImpl() {
 }
 
 // load extra dictionaries
-int HunspellImpl::add_dic(const char* dpath, const char* key) {
-  m_HMgrs.push_back(new HashMgr(dpath, affixpath.c_str(), key));
+int HunspellImpl::add_dic(HunSource dpath, const char* key) {
+  m_HMgrs.push_back(new HashMgr(dpath, affixpath, key));
   return 0;
 }
 
@@ -2120,7 +2120,7 @@ int HunspellImpl::input_conv(const char* word, char* dest, size_t destsize) {
   return 0;
 }
 
-Hunspell::Hunspell(const char* affpath, const char* dpath, const char* key)
+Hunspell::Hunspell(HunSource affpath, HunSource dpath, const char* key)
   : m_Impl(new HunspellImpl(affpath, dpath, key)) {
 }
 
@@ -2129,7 +2129,7 @@ Hunspell::~Hunspell() {
 }
 
 // load extra dictionaries
-int Hunspell::add_dic(const char* dpath, const char* key) {
+int Hunspell::add_dic(HunSource dpath, const char* key) {
   return m_Impl->add_dic(dpath, key);
 }
 
