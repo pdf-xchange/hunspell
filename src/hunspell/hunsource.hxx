@@ -5,25 +5,37 @@
 #include "csutil.hxx"
 
 using HunStreamPtr = std::shared_ptr<std::istream>;
-//using HunSource = std::variant<HunStreamPtr, char const*>;
 
-class HunSource : std::variant<HunStreamPtr, char const*> {
+class HunSource {
+	using Impl = std::variant<HunStreamPtr, char const*>;
+	std::shared_ptr<Impl> pImpl;
 public:
-	using std::variant<HunStreamPtr, char const*>::variant;
+	template<
+		typename T,
+		typename = std::enable_if_t<std::is_constructible_v<Impl, T&&>>
+	>
+	HunSource(T && v)
+		: pImpl(std::make_shared<Impl>(std::forward<T>(v))) {
+			
+	}
+	template<typename T, typename ...Args>
+	static HunSource Stream(Args &&...args) {
+		return std::make_shared<T>(std::forward<Args>(args)...);
+	}
 	auto path() const {
-		auto *pPath = get_if<char const*>(this);
+		auto* pPath = get_if<char const*>(pImpl.get());
 		return pPath ? *pPath : nullptr;
 	}
-	std::istream const * stream() const & {
-		auto *ppStream = get_if<HunStreamPtr>(this);
+	std::istream const* stream() const& {
+		auto* ppStream = get_if<HunStreamPtr>(pImpl.get());
 		return ppStream ? ppStream->get() : nullptr;
 	}
 	HunStreamPtr stream() && {
-		if (auto* ppStream = get_if<HunStreamPtr>(this)) {
-			//assert(ppStream->use_count() == 1); //TODO Assert that we are the only owner of the stream
-			auto pStream = std::move(*ppStream);
-			pStream->clear();
-			pStream->seekg(0, std::ios_base::beg); // reset stream position
+		if (auto* ppStream = get_if<HunStreamPtr>(pImpl.get())) {
+			assert(ppStream->use_count() == 1); // assume the stream is not used anywhere else
+			auto pStream = *ppStream;
+			pStream->clear(); // seekg() will not work if the failbit is set
+			pStream->seekg(0); // reset stream position
 			assert(pStream->tellg() == 0);
 			return pStream;
 		}
