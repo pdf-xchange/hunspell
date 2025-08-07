@@ -4364,15 +4364,18 @@ bool AffixMgr::parse_breaktable(const std::string& line, FileMgr* af) {
 void AffixMgr::reverse_condition(std::string& piece) {
   if (piece.empty())
       return;
-
+ 
   int neg = 0;
+  bool closing_bracket_passed = false;
   for (auto k = piece.rbegin(); k != piece.rend(); ++k) {
     switch (*k) {
       case '[': {
         if (neg)
           *(k - 1) = '[';
-        else
-          *k = ']';
+		else {
+			*k = ']';
+			closing_bracket_passed = true;
+		}
         break;
       }
       case ']': {
@@ -4383,7 +4386,7 @@ void AffixMgr::reverse_condition(std::string& piece) {
         break;
       }
       case '^': {
-        if (*(k - 1) == ']')
+        if (closing_bracket_passed && *(k - 1) == ']')
           neg = 1;
         else if (neg)
           *(k - 1) = *k;
